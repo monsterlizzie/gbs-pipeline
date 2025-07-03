@@ -53,6 +53,8 @@ process TAXONOMY {
     else
         error "The value for --kraken2_memory_mapping is not valid."
 }
+
+
 // Run Bracken to estimate the abundance of Streptococcus agalactiae
 process BRACKEN {
     label 'bracken_container'
@@ -63,19 +65,24 @@ process BRACKEN {
     input:
     path kraken2_db
     tuple val(sample_id), path(report)
+    val read_len
+    val classification_level
+    val threshold
+
 
     output:
-    tuple val(sample_id), path(bracken_report), emit: report
+    tuple val(sample_id), path("${sample_id}.bracken_report.txt"), emit: bracken_report
 
     script:
-    bracken_report='bracken_report.txt'
+    
+    bracken_report="${sample_id}.bracken_report.txt"
     """
-    bracken -d ${KRAKEN_DB} -i ${SAMPLE}.kreport -o ${SAMPLE}.bracken -r ${READ_LEN} -l ${CLASSIFICATION_LEVEL} -t ${THRESHOLD}
+    bracken -d ${kraken2_db} -i ${report} -o ${bracken_report} -r ${read_len} -l ${classification_level} -t ${threshold}
     """
 }
 
 
-// Extract taxonomy QC information and determine QC result based on kraken2_report.txt
+// Extract taxonomy QC information and determine QC result based on bracken_report.txt
 process TAXONOMY_QC {
     label 'bash_container'
     label 'farm_low'
@@ -83,9 +90,9 @@ process TAXONOMY_QC {
     tag "$sample_id"
 
     input:
-    tuple val(sample_id), path(kraken2_report)
+    tuple val(sample_id), path(bracken_report)
     val(qc_sagalactiae_percentage) 
-    val(qc_top_non_strep_genus_percentage)
+    val(qc_top_non_agalactiae_species_percentage)
     output:
     tuple val(sample_id), env(TAXONOMY_QC), emit: result
     tuple val(sample_id), path(taxonomy_qc_report), emit: report
@@ -93,9 +100,9 @@ process TAXONOMY_QC {
     script:
     taxonomy_qc_report='taxonomy_qc_report.csv'
     """
-    KRAKEN2_REPORT="$kraken2_report"
-    QC_SAGALACTIAE_PERCENTAGE="$qc_agalactiae_percentage" 
-    QC_TOP_NON_STREP_GENUS_PERCENTAGE="$qc_top_non_strep_genus_percentage"
+    BRACKEN_REPORT="$bracken_report"
+    QC_SAGALACTIAE_PERCENTAGE="$qc_sagalactiae_percentage" 
+    QC_TOP_NON_AGALACTIAE_SPECIES_PERCENTAGE="$qc_top_non_agalactiae_species_percentage"
     TAXONOMY_QC_REPORT="$taxonomy_qc_report"
 
     source get_taxonomy_qc.sh
