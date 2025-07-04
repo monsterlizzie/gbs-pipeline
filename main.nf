@@ -7,14 +7,31 @@ include { GET_KRAKEN2_DB; TAXONOMY; BRACKEN;TAXONOMY_QC } from "$projectDir/modu
 include { OVERALL_QC } from "$projectDir/modules/overall_qc"
 include { GENERATE_SAMPLE_REPORT; GENERATE_OVERALL_REPORT } from "$projectDir/modules/output"
 
+// Add this utility process to ensure 'databases/' exists
+process INIT_DB_DIR {
+    label 'bash_container'
+    tag 'ensure_databases_dir'
+
+    output:
+    path 'databases', emit: db_dir
+
+    script:
+    """
+    mkdir -p databases
+    """
+}
+
 // Main pipeline workflow
 workflow {
+
     main:
+
+    db_dir_ch = INIT_DB_DIR()
     // Get path and prefix of Reference Genome BWA Database, generate from assembly if necessary
-    GET_REF_GENOME_BWA_DB(params.ref_genome, params.db)
+    GET_REF_GENOME_BWA_DB(params.ref_genome, db_dir_ch)
 
     // Get path to Kraken2 Database, download if necessary
-    GET_KRAKEN2_DB(params.kraken2_db_remote, params.db)
+    GET_KRAKEN2_DB(params.kraken2_db_remote, db_dir_ch)
 
     // Bracken too, GET_KRAKEN2_DB(params.kraken2_db_remote, params.db)
  
