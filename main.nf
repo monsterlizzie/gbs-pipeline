@@ -122,7 +122,7 @@ workflow {
     )
     // From Channel TAXONOMY.out.report, provide taxonomy QC status
     // Output into Channels TAXONOMY_QC.out.result & TAXONOMY_QC.out.report
-    TAXONOMY_QC(BRACKEN.out.bracken_report, params.sagalactiae_percentage, params.non_strep_percentage)
+    TAXONOMY_QC(BRACKEN.out.bracken_report, params.sagalactiae_percentage, params.top_non_agalactiae_species_percentage)
 
     
     // Merge Channels FILE_VALIDATION.out.result & READ_QC.out.result & ASSEMBLY_QC.out.result & MAPPING_QC.out.result & TAXONOMY_QC.out.result to provide Overall QC Status
