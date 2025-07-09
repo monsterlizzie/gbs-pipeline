@@ -10,14 +10,16 @@ include { GENERATE_SAMPLE_REPORT; GENERATE_OVERALL_REPORT } from "$projectDir/mo
 // Add this utility process to ensure 'databases/' exists
 process INIT_DB_DIR {
     label 'bash_container'
-    tag 'ensure_databases_dir'
+    label 'farm_local'
+    publishDir "${params.db}"
 
     output:
-    path 'databases', emit: db_dir
+    val "${params.db}", emit: db_dir
+    path "do_not_modify", emit: dummy
 
     script:
     """
-    mkdir -p databases
+    mkdir do_not_modify
     """
 }
 
@@ -26,7 +28,9 @@ workflow {
 
     main:
 
-    db_dir_ch = INIT_DB_DIR()
+    INIT_DB_DIR()
+    db_dir_ch = INIT_DB_DIR.out.db_dir
+    
     // Get path and prefix of Reference Genome BWA Database, generate from assembly if necessary
     GET_REF_GENOME_BWA_DB(params.ref_genome, db_dir_ch)
 
