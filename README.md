@@ -16,7 +16,7 @@ The pipeline executes the following QC stages **for every sample**:
 | **FASTQ check**  | Internal validation script               | Ensures correct naming and paired-end layout   |
 | **Read QC**      | `fastp`                                  | Adapter trimming and per-read quality check    |
 | **Assembly**     | `shovill` (default) or `unicycler`       | De novo genome assembly                        |
-| **Assembly QC**  | `quast`                                  | Checks genome size, N50, contig count          |
+| **Assembly QC**  | `quast`                                  | Checks genome size and contig count          |
 | **Mapping QC**   | `bwa`, `samtools`                        | Align reads to reference, compute depth/coverage|
 | **Taxonomy QC**  | `kraken2`, `bracken`                     | Confirm species identity and screen contaminants|
 | **Final Report** | Internal summary script                  | Aggregates QC metrics with pass/fail flags     |
