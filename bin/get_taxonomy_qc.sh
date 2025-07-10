@@ -6,16 +6,22 @@
 # - $QC_TOP_NON_AGALACTIAE_SPECIES_PERCENTAGE
 # - $TAXONOMY_QC_REPORT
 
-# Get S. agalactiae abundance (% = fraction * 100)
-PERCENTAGE=$(awk -F"\t" '$1 == "Streptococcus agalactiae" && $3 == "S" { printf "%.2f", $7 * 100 }' "$BRACKEN_REPORT")
+# Get combined S. agalactiae abundance (% = fraction * 100)
+PERCENTAGE=$(awk -F"\t" '
+    $3 == "S" && ($1 == "Streptococcus agalactiae" || $1 == "Streptococcus sp. '\''group B'\''") { sum += $7 }
+    END { printf "%.2f", sum * 100 }
+' "$BRACKEN_REPORT")
 
 # Get top non-agalactiae species (by highest fraction of total reads)
-TOP_NON_AGALACTIAE_RECORD=$(awk -F"\t" '$3 == "S" && $1 != "Streptococcus agalactiae"' "$BRACKEN_REPORT" | sort -t $'\t' -k7,7nr | head -n 1)
+TOP_NON_AGALACTIAE_RECORD=$(awk -F"\t" '
+    $3 == "S" && $1 != "Streptococcus agalactiae" && $1 != "Streptococcus sp. '\''group B'\''" { print }
+' "$BRACKEN_REPORT" | sort -t $'\t' -k7,7nr | head -n 1)
+
 
 if [[ -n "$TOP_NON_AGALACTIAE_RECORD" ]]; then
     TOP_NON_AGALACTIAE_SPECIES=$(echo "$TOP_NON_AGALACTIAE_RECORD" | cut -f1)
     RAW_ABUNDANCE=$(echo "$TOP_NON_AGALACTIAE_RECORD" | cut -f7)
-    TOP_NON_AGALACTIAE_SPECIES_PERCENTAGE=$(printf "%.2f" "$(echo "$RAW_ABUNDANCE * 100" | bc -l)")
+    TOP_NON_AGALACTIAE_SPECIES_PERCENTAGE=$(printf "%.3f" "$(echo "$RAW_ABUNDANCE * 100" | bc -l)")
 else
     TOP_NON_AGALACTIAE_SPECIES="NONE_DETECTED"
     TOP_NON_AGALACTIAE_SPECIES_PERCENTAGE="0.00"
