@@ -91,7 +91,7 @@ nextflow run main.nf -profile lsf
 | QC Metric                          | Threshold         |
 |-----------------------------------|-------------------|
 | *S. agalactiae* abundance         | ≥ 70.00%          |
-| Top non-agalactiae species        | ≤ 2.00%           |
+| Top non-agalactiae species        | ≤ 5.00%           |
 | Het-SNPs (<50-bp distance)        | < 40              |
 | Reference genome coverage         | ≥ 70.0%           |
 | Mean read depth                   | ≥ 20×             |
