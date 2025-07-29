@@ -156,3 +156,33 @@ process MAPPING_QC {
     source get_mapping_qc.sh
     """
 }
+
+process MAPPING_QC_FALLBACK {
+    label 'bash_container'
+    label 'farm_low'
+
+    tag "$sample_id"
+
+    input:
+    tuple val(sample_id), val(read_qc)
+    val(qc_ref_coverage)
+    val(qc_het_snp_site)
+
+    output:
+    tuple val(sample_id), val("NA"), val("NA"), emit: result
+    tuple val(sample_id), path(mapping_qc_report), emit: report
+
+    when:
+    read_qc == "FAIL"
+
+    script:
+    mapping_qc_report = 'mapping_qc_report.csv'
+    """
+    SAMPLE_ID="$sample_id"
+    MAPPING_QC_REPORT="$mapping_qc_report"
+
+    echo "Sample_ID,Mapping_QC,Ref_Cov_%,Het-SNP#" > "\$MAPPING_QC_REPORT"
+    echo "\$SAMPLE_ID,NA,NA,NA" >> "\$MAPPING_QC_REPORT"
+    """
+
+}

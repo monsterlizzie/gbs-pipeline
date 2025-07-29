@@ -27,18 +27,26 @@ def get_df_output(input_pattern, output_columns):
     dfs = [df_manifest]
     reports = glob.glob(input_pattern)
     for report in reports:
-        df = pd.read_csv(report, dtype=str, keep_default_na=False)
+        df = pd.read_csv(report, dtype=str)  
+        df.replace("", pd.NA, inplace=True)  
         dfs.append(df)
 
     df_output = pd.concat(dfs, ignore_index=True).sort_values(by='Sample_ID')
 
-    # Enforce column order
+    # Ensure all expected columns exist
+    for col in output_columns:
+        if col not in df_output.columns:
+            df_output[col] = pd.NA
+
     df_output = df_output[output_columns]
 
-    # Fill any missing module results in "PASS" samples
+    # Fill missing fields in PASS samples with "MODULE FAILURE"
     df_output.loc[df_output["Overall_QC"] == "PASS"] = (
         df_output.loc[df_output["Overall_QC"] == "PASS"].fillna(value="MODULE FAILURE")
     )
+
+    # Fill all other missing values with "NA"
+    df_output.fillna("NA", inplace=True)
 
     return df_output
 

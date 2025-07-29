@@ -108,3 +108,23 @@ process TAXONOMY_QC {
     source get_taxonomy_qc.sh
     """
 }
+
+process TAXONOMY_QC_FALLBACK {
+    label 'bash_container'
+    label 'farm_low'
+
+    tag "$sample_id"
+
+    input:
+    val(sample_id)
+
+    output:
+    tuple val(sample_id), val("NA"), emit: result
+    tuple val(sample_id), path("taxonomy_qc_report.csv"), emit: report
+
+    script:
+    """
+    echo "Sample_ID,Taxonomy_QC,S.agalactiae_%,Top_Non-Agalactiae_Species,Top_Non-agalactiae_Species_%" > taxonomy_qc_report.csv
+    echo "$sample_id,NA,NA,NA,NA" >> taxonomy_qc_report.csv
+    """
+}

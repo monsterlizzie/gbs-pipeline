@@ -10,11 +10,15 @@ output_file = sys.argv[2]
 input_files = sys.argv[3:]
 
 # Load and concatenate the CSVs by columns
-dfs = [pd.read_csv(f, dtype=str) for f in input_files]
+dfs = [pd.read_csv(f, dtype=str, keep_default_na=False, na_values=[]) for f in input_files]
 combined_df = pd.concat(dfs, axis=1)
 
-# Insert Sample_ID as first column
-combined_df.insert(0, "Sample_ID", sample_id)
+# Remove any duplicate 'Sample_ID' columns, keeping only the first one
+combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
+
+# Insert Sample_ID as the first column, only if it’s not already present
+if "Sample_ID" not in combined_df.columns:
+    combined_df.insert(0, "Sample_ID", sample_id)
 
 # Reorder columns: Sample_ID → all QC columns → the rest of the columns
 fixed_first = ['Sample_ID']

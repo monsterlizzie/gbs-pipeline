@@ -1,11 +1,13 @@
 nextflow.enable.dsl=2
 // import modules for process
 include { FILE_VALIDATION; PREPROCESS; READ_QC } from "$projectDir/modules/preprocess"
-include { ASSEMBLY_UNICYCLER; ASSEMBLY_SHOVILL; ASSEMBLY_ASSESS; ASSEMBLY_QC } from "$projectDir/modules/assembly"
-include { GET_REF_GENOME_BWA_DB; MAPPING; SAM_TO_SORTED_BAM; SNP_CALL; HET_SNP_COUNT; MAPPING_QC } from "$projectDir/modules/mapping"
-include { GET_KRAKEN2_DB; TAXONOMY; BRACKEN;TAXONOMY_QC } from "$projectDir/modules/taxonomy"
+include { ASSEMBLY_UNICYCLER; ASSEMBLY_SHOVILL; ASSEMBLY_ASSESS; ASSEMBLY_QC; ASSEMBLY_QC_FALLBACK } from "$projectDir/modules/assembly"
+include { GET_REF_GENOME_BWA_DB; MAPPING; SAM_TO_SORTED_BAM; SNP_CALL; HET_SNP_COUNT; MAPPING_QC; MAPPING_QC_FALLBACK} from "$projectDir/modules/mapping"
+include { GET_KRAKEN2_DB; TAXONOMY; BRACKEN;TAXONOMY_QC; TAXONOMY_QC_FALLBACK } from "$projectDir/modules/taxonomy"
 include { OVERALL_QC } from "$projectDir/modules/overall_qc"
 include { GENERATE_SAMPLE_REPORT; GENERATE_OVERALL_REPORT } from "$projectDir/modules/output"
+
+
 
 // Add this utility process to ensure 'databases/' exists
 process INIT_DB_DIR {
@@ -93,6 +95,13 @@ workflow {
         params.depth
     )
 
+    // Provide fallback Assembly QC for samples that failed READ_QC
+    READ_QC_FAIL_SAMPLE_ID_ch = READ_QC.out.result.filter { it[1] == "FAIL" }.map { it[0] }
+    ASSEMBLY_QC_FALLBACK(READ_QC_FAIL_SAMPLE_ID_ch)
+
+    assembly_qc_all = ASSEMBLY_QC.out.result.mix(ASSEMBLY_QC_FALLBACK.out.result)
+    assembly_qc_report_all = ASSEMBLY_QC.out.report.mix(ASSEMBLY_QC_FALLBACK.out.report)
+
     // From Channel READ_QC_PASSED_READS_ch map reads to reference
     // Output into Channel MAPPING.out.sam
     MAPPING(GET_REF_GENOME_BWA_DB.out.path, GET_REF_GENOME_BWA_DB.out.prefix, READ_QC_PASSED_READS_ch)
@@ -109,11 +118,20 @@ workflow {
     // Merge Channels SAM_TO_SORTED_BAM.out.ref_coverage & HET_SNP_COUNT.out.result to provide Mapping QC Status
     // Output into Channels MAPPING_QC.out.result & MAPPING_QC.out.report
     MAPPING_QC(
-        SAM_TO_SORTED_BAM.out.ref_coverage
-        .join(HET_SNP_COUNT.out.result, failOnDuplicate: true),
-        params.ref_coverage,
-        params.het_snp_site
-    )
+    SAM_TO_SORTED_BAM.out.ref_coverage
+    .join(HET_SNP_COUNT.out.result, failOnDuplicate: true),
+    params.ref_coverage,
+    params.het_snp_site
+)
+
+    // Provide fallback Mapping QC for samples that failed READ_QC
+    READ_QC_FAIL_ch = READ_QC.out.result.filter { it[1] == "FAIL" }
+    MAPPING_QC_FALLBACK(READ_QC_FAIL_ch, params.ref_coverage, params.het_snp_site)
+
+    // Now safely mix both outputs
+    mapping_qc_all = MAPPING_QC.out.result.mix(MAPPING_QC_FALLBACK.out.result)
+    mapping_qc_report_all = MAPPING_QC.out.report.mix(MAPPING_QC_FALLBACK.out.report)
+
 
     // From Channel READ_QC_PASSED_READS_ch assess Streptococcus agalactiae percentage in reads
     // Output into Channel TAXONOMY.out.report
@@ -130,16 +148,20 @@ workflow {
     // Output into Channels TAXONOMY_QC.out.result & TAXONOMY_QC.out.report
     TAXONOMY_QC(BRACKEN.out.bracken_report, params.sagalactiae_percentage, params.top_non_agalactiae_species_percentage)
 
-    
+    TAXONOMY_QC_FALLBACK(READ_QC_FAIL_SAMPLE_ID_ch)
+    taxonomy_qc_all = TAXONOMY_QC.out.result.mix(TAXONOMY_QC_FALLBACK.out.result)
+    taxonomy_qc_report_all = TAXONOMY_QC.out.report.mix(TAXONOMY_QC_FALLBACK.out.report)
+
+
     // Merge Channels FILE_VALIDATION.out.result & READ_QC.out.result & ASSEMBLY_QC.out.result & MAPPING_QC.out.result & TAXONOMY_QC.out.result to provide Overall QC Status
     // Output into Channel OVERALL_QC.out.result & OVERALL_QC.out.report
     OVERALL_QC(
         raw_read_pairs_ch.map{ it[0] }
         .join(FILE_VALIDATION.out.result, failOnDuplicate: true, remainder: true)
         .join(READ_QC.out.result, failOnDuplicate: true, remainder: true)
-        .join(ASSEMBLY_QC.out.result, failOnDuplicate: true, remainder: true)
-        .join(MAPPING_QC.out.result, failOnDuplicate: true, remainder: true)
-        .join(TAXONOMY_QC.out.result, failOnDuplicate: true, remainder: true)
+        .join(assembly_qc_report_all, failOnDuplicate: true, remainder: true)
+        .join(mapping_qc_report_all, failOnDuplicate: true, remainder: true)
+        .join(taxonomy_qc_report_all, failOnDuplicate: true, remainder: true)
     )
 
     // From Channel READ_QC_PASSED_READS_ch, only output reads of samples passed overall QC based on Channel OVERALL_QC.out.result
@@ -152,18 +174,22 @@ workflow {
                             .filter { it[1] == 'PASS' }
                             .map { it[0, 2..-1] }
 
-   
+
     // Generate sample reports by merging outputs from all result-generating modules
     GENERATE_SAMPLE_REPORT(
         raw_read_pairs_ch.map{ it[0] }
         .join(READ_QC.out.report, failOnDuplicate: true, remainder: true)
-        .join(ASSEMBLY_QC.out.report, failOnDuplicate: true, remainder: true)
-        .join(MAPPING_QC.out.report, failOnDuplicate: true, remainder: true)
-        .join(TAXONOMY_QC.out.report, failOnDuplicate: true, remainder: true)
+        .join(assembly_qc_report_all, failOnDuplicate: true, remainder: true)
+        .join(mapping_qc_report_all, failOnDuplicate: true, remainder: true)
+        .join(taxonomy_qc_report_all, failOnDuplicate: true, remainder: true)
         .join(OVERALL_QC.out.report, failOnDuplicate: true, failOnMismatch: true)
-        .map{[ it[0], it[1..-1].minus(null)]}
-       
+        .map { row ->
+            def sample_id = row[0]
+            def report_paths = row[1..-1].findAll { it != null && it != "NA" }
+            [sample_id, report_paths]
+        }
     )
+
     //GENERATE_OVERALL_REPORT(GENERATE_SAMPLE_REPORT.out.report.collect()) for later combining qc and tyoer reports 
 
 }

@@ -114,3 +114,25 @@ process ASSEMBLY_QC {
     """
 }
 
+process ASSEMBLY_QC_FALLBACK {
+    label 'bash_container'
+    label 'farm_low'
+
+    tag "$sample_id"
+
+    input:
+    val(sample_id)
+
+    output:
+    tuple val(sample_id), val("NA"), emit: result
+    tuple val(sample_id), path(assembly_qc_report), emit: report
+
+    script:
+    assembly_qc_report='assembly_qc_report.csv'
+    """
+    echo "Assembly_QC,Contigs#,Assembly_Length,Seq_Depth" > "$assembly_qc_report"
+    echo "NA,NA,NA,NA" >> "$assembly_qc_report"
+    """
+}
+
+
