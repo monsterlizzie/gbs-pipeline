@@ -159,9 +159,9 @@ workflow {
         raw_read_pairs_ch.map{ it[0] }
         .join(FILE_VALIDATION.out.result, failOnDuplicate: true, remainder: true)
         .join(READ_QC.out.result, failOnDuplicate: true, remainder: true)
-        .join(assembly_qc_report_all, failOnDuplicate: true, remainder: true)
-        .join(mapping_qc_report_all, failOnDuplicate: true, remainder: true)
-        .join(taxonomy_qc_report_all, failOnDuplicate: true, remainder: true)
+        .join(assembly_qc_all, failOnDuplicate: true, remainder: true)
+        .join(mapping_qc_all, failOnDuplicate: true, remainder: true)
+        .join(taxonomy_qc_all, failOnDuplicate: true, remainder: true)
     )
 
     // From Channel READ_QC_PASSED_READS_ch, only output reads of samples passed overall QC based on Channel OVERALL_QC.out.result
