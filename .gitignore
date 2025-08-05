@@ -13,6 +13,7 @@ input
 output
 test_input
 *.html
+lib
 
 # Singularity cache
 singularity_cache
