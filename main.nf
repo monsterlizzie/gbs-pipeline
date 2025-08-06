@@ -290,21 +290,9 @@ workflow {
     }
 
     
-    // Output files
-    params.sero_res_incidence_out         = "${params.output}/typer/serotype_res_incidence.txt"
-    params.variants_out                   = "${params.output}/typer/gbs_res_variants.txt"
-    params.alleles_variants_out          = "${params.output}/typer/drug_cat_alleles_variants.txt"
-    params.res_accessions_out            = "${params.output}/typer/resfinder_accessions.txt"
-    params.existing_pbp_alleles_out      = "${params.output}/typer/existing_pbp_alleles.txt"
-    params.surface_protein_incidence_out = "${params.output}/typer/surface_protein_incidence.txt"
-    params.surface_protein_variants_out  = "${params.output}/typer/surface_protein_variants.txt"
-    params.existing_mlst_alleles_out     = "${params.output}/typer/existing_sequence_types.txt"
-    params.new_mlst_alleles_status       = "${params.output}/typer/new_mlst_alleles.log"
-    params.gbs_typer_report              = "${params.output}/typer/gbs_typer_report.txt"
-
-
    
 
+   
 
     workflow GBS_RES {
 
