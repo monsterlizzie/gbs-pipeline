@@ -556,7 +556,27 @@ workflow PBP2X {
         combine_results.out
             .collectFile(name: file("${params.output}/${params.gbs_typer_report}"), keepHeader: true, sort: true)
     }
+    
+    //Build the Typer CSV channel from the collectFile
+    typer_csv_ch = Channel.empty()
+    if (params.run_sero_res & params.run_surfacetyper & params.run_mlst) {
+        // combine_results(...) must already have run above
+        typer_csv_ch = combine_results.out.collectFile(
+            name: file("${params.output}/${params.gbs_typer_report}"),
+            keepHeader: true,
+            sort: true
+        )
+    }
 
-    //GENERATE_OVERALL_REPORT(GENERATE_SAMPLE_REPORT.out.report.collect()) for later combining qc and tyoer reports 
+    // 1) QC barrier (emit once when all sample QC reports are present)
+    qc_reports_ch = Channel.fromPath("${params.output}/sample_reports/*_report.csv", checkIfExists: true)
+    qc_done_ch    = qc_reports_ch.collect()
 
+    // 2) Build the two SINGLETON inputs the process expects
+    qc_glob_ch    = qc_done_ch.map { "${params.output}/sample_reports/*_report.csv" }
+    typer_path_ch = typer_csv_ch.map { it.toString() }
+                                .ifEmpty { Channel.value('NONE') }  // if typer pipeline wasn't run
+
+    // 3) Call the process with TWO channels, in order
+    GENERATE_OVERALL_REPORT(qc_glob_ch, typer_path_ch)
 }

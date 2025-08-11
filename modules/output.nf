@@ -19,22 +19,24 @@ process GENERATE_SAMPLE_REPORT {
 }
 
 process GENERATE_OVERALL_REPORT {
-    label 'python_container'
-    label 'farm_low'
+  label 'python_container'
+  publishDir "${params.output}", mode: 'copy'
 
-    publishDir "${params.output}", mode: "copy"
+  input:
+  val qc_glob
+  val typer_path
 
-    input:
-    path '*_report.csv'
+  output:
+  path "summary.csv"
 
-    output: 
-    path "results.csv", emit: report // for combining typer reports
-    //path "$overall_report", emit: report // for combining typer reports
-
-    script:
-    //input_pattern='*_report.csv' // for combining typer reports
-    //overall_report='results.csv' // for combining typer reports
-    """
-    generate_overall_report.py *_report.csv results.csv
-    """
+  script:
+  """
+  set -e
+  echo "QC glob: ${qc_glob}"
+  echo "Typer: ${typer_path}"
+  python3 ${projectDir}/bin/generate_overall_report.py \
+      "${qc_glob}" \
+      "${typer_path}" \
+      summary.csv
+  """
 }
