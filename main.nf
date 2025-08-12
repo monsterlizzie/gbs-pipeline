@@ -442,12 +442,17 @@ workflow {
     }
 
     // Barrier for overall report
-    qc_reports_ch = Channel.fromPath("${params.output}/sample_reports/*_report.csv", checkIfExists: true)
-    qc_done_ch    = qc_reports_ch.collect()
+        
+    // Trigger overall report only AFTER all per‑sample reports are written
+    done_ch       = GENERATE_SAMPLE_REPORT.out.collect()
 
-    qc_glob_ch    = qc_done_ch.map { "${params.output}/sample_reports/*_report.csv" }
-    typer_path_ch = typer_csv_ch.map { it.toString() }
-                                .ifEmpty { Channel.value('NONE') }
+    // Hand the glob string as a simple value to the process
+    qc_glob_ch    = done_ch.map { "${params.output}/sample_reports/*_report.csv" }
 
+    // Typer path (or NONE if typer wasn’t run)
+    typer_path_ch = typer_csv_ch.ifEmpty { Channel.value('NONE') }.map { it.toString() }
+
+    // Fire the overall report
     GENERATE_OVERALL_REPORT(qc_glob_ch, typer_path_ch)
+
 }
