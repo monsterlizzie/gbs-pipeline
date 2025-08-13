@@ -1,20 +1,30 @@
 process get_version {
-    input:
+    publishDir "${params.output}/meta", mode: 'copy'
 
     output:
-    path("${output}")
+    path "version.txt"
 
-    script:
+    shell:
+    '''
+    set -euo pipefail
+
     output="version.txt"
-    version=params.version
-    """
-    echo "version" > ${output}
+    version="${params.version:-}"
 
-    if [ -z ${version} ];
-    then
-        echo \$(git -C $baseDir describe --tags) >> ${output}
+    echo "version" > "${output}"
+
+    if [[ -z "${version}" ]]; then
+      # Try tag first
+      v="$(git -C "${baseDir}" describe --tags 2>/dev/null || true)"
+      # If no tag, use short commit hash
+      if [[ -z "${v}" ]]; then
+        v="$(git -C "${baseDir}" rev-parse --short HEAD 2>/dev/null || true)"
+      fi
+      # If not a git repo, fall back to "unknown"
+      [[ -z "${v}" ]] && v="unknown"
+      echo "${v}" >> "${output}"
     else
-        echo ${version} >> ${output}
+      echo "${version}" >> "${output}"
     fi
-    """
+    '''
 }
