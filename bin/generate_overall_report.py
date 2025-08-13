@@ -12,7 +12,7 @@ COLUMNS_BY_CATEGORY = {
     'READ': ['Bases'],
     'ASSEMBLY': ['Contigs#', 'Assembly_Length', 'Seq_Depth'],
     'MAPPING': ['Ref_Cov_%', 'Het-SNP#'],
-    'TAXONOMY': ['S.agalactiae_%', 'Top_Non-Agalactiae_Species', 'Top_Non-agalactiae_Species_%'],
+    'TAXONOMY': ['S.agalactiae_%', 'Top_Non-agalactiae_Species', 'Top_Non-agalactiae_Species_%'],
 }
 QC_FIXED = list(chain.from_iterable(COLUMNS_BY_CATEGORY.values()))
 
