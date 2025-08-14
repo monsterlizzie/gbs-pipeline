@@ -86,10 +86,6 @@ workflow {
         .filter { id, status, r1, r2, unp -> status == 'PASS' }
         .map { id, status, r1, r2, unp -> tuple(id as String, file(r1), file(r2), file(unp)) }
 
-// ---- debug: what left READ_QC as "passed"
-    READ_QC_PASSED_READS_ch.view { id, r1, r2, unp ->
-        "DEBUG:READ_QC_PASSED id=${id} r1=${r1?.name} r2=${r2?.name} unp=${unp?.name}"
-    }
 
     // === TYPER adapter ===
     // 1) drop any sample missing R1 or R2
@@ -98,10 +94,6 @@ workflow {
         .filter { id, r1, r2, unp -> r1 && r2 }
         .map    { id, r1, r2, unp -> tuple(id as String, [ file(r1), file(r2) ]) }
 
-// ---- debug: what we pass into typer
-    TYPER_PAIRLIST_ch.view { id, pair ->
-        "DEBUG:TYPER_PAIRLIST id=${id} pair=${pair*.name.join(',')}"
-    }
 
     // Assembler (these modules can keep using the 4-tuple from READ_QC_PASSED_READS_ch if that’s what they expect)
     switch (params.assembler) {
