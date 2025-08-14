@@ -23,18 +23,18 @@ include { get_version }                                                         
 
 // ── Utility: ensure db dir exists ──────────────────────────────────────────────
 process INIT_DB_DIR {
-  label 'bash_container'
-  label 'farm_local'
-  publishDir "${params.db}"
+    label 'bash_container'
+    label 'farm_local'
+    publishDir "${params.db}"
 
-  output:
-  val "${params.db}"       emit: db_dir
-  path "do_not_modify"      emit: dummy
+    output:
+    val "${params.db}", emit: db_dir
+    path "do_not_modify", emit: dummy
 
-  script:
-  """
-  mkdir -p do_not_modify
-  """
+    script:
+    """
+    mkdir -p do_not_modify
+    """
 }
 
 // ── Main pipeline ──────────────────────────────────────────────────────────────
