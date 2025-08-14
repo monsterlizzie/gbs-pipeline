@@ -1,4 +1,5 @@
 nextflow.enable.dsl=2
+
 // import modules for process
 include { FILE_VALIDATION; PREPROCESS; READ_QC } from "$projectDir/modules/preprocess"
 include { ASSEMBLY_UNICYCLER; ASSEMBLY_SHOVILL; ASSEMBLY_ASSESS; ASSEMBLY_QC; ASSEMBLY_QC_FALLBACK } from "$projectDir/modules/assembly"
@@ -48,8 +49,6 @@ workflow {
     // ----------------------------------------------------------
     // READS: build canonical (deduplicated) read-pairs channel
     // ----------------------------------------------------------
-    // fromFilePairs may emit duplicates when both .fastq and .fastq.gz exist.
-    // We group by sample id and prefer a pair where BOTH mates are gzipped.
     raw_read_pairs_ch = Channel.fromFilePairs(
         "$params.reads/*_{,R}{1,2}{,_001}.{fq,fastq}{,.gz}",
         checkIfExists: true
@@ -64,7 +63,6 @@ workflow {
         }
 
     // Basic input files validation
-    // Output into Channel FILE_VALIDATION.out.result
     FILE_VALIDATION(RAW_READS_ONE_ch)
 
     // From RAW_READS_ONE_ch, only output valid reads of samples based on FILE_VALIDATION
@@ -74,18 +72,44 @@ workflow {
                         .map { id, status, reads -> tuple(id, reads) }   // keep (id, [R1,R2])
 
     // Preprocess valid read pairs
-    // Output into Channels PREPROCESS.out.processed_reads & PREPROCESS.out.json
     PREPROCESS(VALID_READS_ch)
 
     // From PREPROCESS.out.json, provide Read QC status
-    // Output into Channels READ_QC.out.bases, READ_QC.out.result, READ_QC.out.report
     READ_QC(PREPROCESS.out.json, params.length_low, params.depth)
 
-    // From PREPROCESS.out.processed_reads, only output reads of samples passed Read QC
+    // ===== ROBUST NORMALIZATION (prevents R2=null in typer) =====
+    // Join READ_QC + processed reads, keep only PASS, and ALWAYS emit (id, R1, R2, unpaired)
     READ_QC_PASSED_READS_ch = READ_QC.out.result
-                        .join(PREPROCESS.out.processed_reads, failOnDuplicate: true)
-                        .filter { it[1] == 'PASS' }
-                        .map { it[0, 2..-1] }
+        .join(PREPROCESS.out.processed_reads, failOnDuplicate: true)
+        .filter { row -> row[1] == 'PASS' }
+        .map { row ->
+            def sid = row[0] as String
+            def r1 = null
+            def r2 = null
+            def unp = null
+            if (row.size() == 3 && row[2] instanceof List) {
+                def L = (List) row[2]
+                r1  = L.size() > 0 ? L[0] : null
+                r2  = L.size() > 1 ? L[1] : null
+                unp = L.size() > 2 ? L[2] : null
+            } else if (row.size() >= 5) {
+                // shape: (id, status, r1, r2, unpaired)
+                r1  = row[2]
+                r2  = row[3]
+                unp = row[4]
+            } else if (row.size() == 4) {
+                // shape: (id, status, r1, r2)
+                r1  = row[2]
+                r2  = row[3]
+                unp = null
+            }
+            tuple(sid, r1, r2, unp)
+        }
+
+    // Strictly require paired reads for typer workflows
+    OVERALL_QC_PASSED_PAIRED_READS_ch = READ_QC_PASSED_READS_ch
+        .filter { id, r1, r2, unp -> r1 && r2 }
+        .map    { id, r1, r2, unp -> tuple(id as String, r1, r2) }
 
     // Assembler
     switch (params.assembler) {
@@ -151,22 +175,13 @@ workflow {
 
     // OVERALL_QC (leftmost seed must be unique IDs!)
     OVERALL_QC(
-        RAW_READS_ONE_ch.map{ it[0] }     // << use deduped IDs
+        RAW_READS_ONE_ch.map{ it[0] }     // use deduped IDs
         .join(FILE_VALIDATION.out.result, failOnDuplicate: true, remainder: true)
         .join(READ_QC.out.result, failOnDuplicate: true, remainder: true)
         .join(assembly_qc_all, failOnDuplicate: true, remainder: true)
         .join(mapping_qc_all, failOnDuplicate: true, remainder: true)
         .join(taxonomy_qc_all, failOnDuplicate: true, remainder: true)
     )
-
-    // Reads that passed overall QC
-    OVERALL_QC_PASSED_READS_ch = OVERALL_QC.out.result
-                        .join(READ_QC_PASSED_READS_ch, failOnDuplicate: true)
-                        .filter { it[1] == 'PASS' }
-                        .map { it[0, 2..-1] }
-
-    // Extract only paired reads (R1, R2)
-    OVERALL_QC_PASSED_PAIRED_READS_ch = OVERALL_QC_PASSED_READS_ch.map { id, r1, r2, unpaired -> tuple(id, r1, r2) }
 
     // Assemblies for passed samples
     OVERALL_QC_PASSED_ASSEMBLIES_ch = OVERALL_QC.out.result
@@ -176,7 +191,7 @@ workflow {
 
     // Sample reports
     GENERATE_SAMPLE_REPORT(
-        RAW_READS_ONE_ch.map{ it[0] }       // << use deduped IDs
+        RAW_READS_ONE_ch.map{ it[0] }
         .join(READ_QC.out.report, failOnDuplicate: true, remainder: true)
         .join(assembly_qc_report_all, failOnDuplicate: true, remainder: true)
         .join(mapping_qc_report_all, failOnDuplicate: true, remainder: true)
@@ -189,18 +204,7 @@ workflow {
         }
     )
 
-    // Optional: keep this small guard, though we don't use read_pairs_ch below
-    if (params.run_sero_res | params.run_mlst | params.run_surfacetyper){
-        if (params.reads == ""){
-            println("Please specify reads with --reads.")
-            println("Print help with nextflow main.nf --help")
-            System.exit(1)
-        }
-        Channel.fromFilePairs( params.reads, checkIfExists: true )
-            .set { read_pairs_ch }
-    }
-
-    // Check outputs dir
+    // ---- Parameter sanity checks ----
     if (params.output == ""){
         println("Please specify the results directory with --params.output.")
         println("Print help with nextflow main.nf --help")
@@ -213,7 +217,6 @@ workflow {
         System.exit(1)
     }
 
-    // Param range checks 
     if (params.gbs_res_min_coverage < 0 | params.gbs_res_min_coverage > 100){
         println("--gbs_res_min_coverage value not in range. Please specify a value between 0 and 100.")
         System.exit(1)
@@ -408,9 +411,7 @@ workflow {
         PBP2B(get_pbp_genes.out)
         PBP2X(get_pbp_genes.out)
 
-        PBP1A.out
-            .concat(PBP2B.out, PBP2X.out)
-            .set { PBP_all }
+        PBP_all = PBP1A.out.concat(PBP2B.out, PBP2X.out)
 
         PBP_all
             .collectFile(name: file("${params.output}/${params.existing_pbp_alleles_out}"), keepHeader: true, sort: true)
@@ -441,12 +442,8 @@ workflow {
         )
     }
 
-    // Barrier for overall report
-        
-    // Trigger overall report only AFTER all per‑sample reports are written
+    // Trigger overall report only AFTER all per-sample reports are written
     done_ch       = GENERATE_SAMPLE_REPORT.out.collect()
-
-    // Hand the glob string as a simple value to the process
     qc_glob_ch    = done_ch.map { "${params.output}/sample_reports/*_report.csv" }
 
     // Typer path (or NONE if typer wasn’t run)
@@ -454,5 +451,4 @@ workflow {
 
     // Fire the overall report
     GENERATE_OVERALL_REPORT(qc_glob_ch, typer_path_ch)
-
 }
