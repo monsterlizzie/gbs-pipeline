@@ -28,7 +28,7 @@ process INIT_DB_DIR {
   publishDir "${params.db}"
 
   output:
-  val("${params.db}")       emit: db_dir
+  val "${params.db}"       emit: db_dir
   path "do_not_modify"      emit: dummy
 
   script:
