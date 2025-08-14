@@ -28,8 +28,8 @@ process INIT_DB_DIR {
   publishDir "${params.db}"
 
   output:
-  val "${params.db}" into db_dir_ch
-  path "do_not_modify" emit: dummy
+  val("${params.db}")       emit: db_dir
+  path "do_not_modify"      emit: dummy
 
   script:
   """
@@ -42,6 +42,8 @@ workflow {
 
   // Init db dir + ref & kraken DBs
   INIT_DB_DIR()
+  db_dir_ch = INIT_DB_DIR.out.db_dir
+
   GET_REF_GENOME_BWA_DB(params.ref_genome, db_dir_ch)
   GET_KRAKEN2_DB(params.kraken2_db_remote, db_dir_ch)
 
@@ -67,7 +69,7 @@ workflow {
       .filter { row -> row[1] == 'PASS' }
       .map { id, status, reads -> tuple(id, reads) }  // (id, [R1,R2])
 
-  PREPROCESS(VALID_READS_ch)                         // emits: processed_reads (id, r1,r2,unpaired), json
+  PREPROCESS(VALID_READS_ch)                         // emits processed_reads & json
   READ_QC(PREPROCESS.out.json, params.length_low, params.depth)
 
   // ── Keep only PASS + map explicitly to avoid index bugs ────────────────────
