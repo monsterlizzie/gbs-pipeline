@@ -48,8 +48,6 @@ workflow {
     // ----------------------------------------------------------
     // READS: build canonical (deduplicated) read-pairs channel
     // ----------------------------------------------------------
-    // fromFilePairs may emit duplicates when both .fastq and .fastq.gz exist.
-    // We group by sample id and prefer a pair where BOTH mates are gzipped.
     raw_read_pairs_ch = Channel.fromFilePairs(
         "$params.reads/*_{,R}{1,2}{,_001}.{fq,fastq}{,.gz}",
         checkIfExists: true
@@ -441,13 +439,14 @@ workflow {
         )
     }
 
-    // Barrier for overall report
-    qc_reports_ch = Channel.fromPath("${params.output}/sample_reports/*_report.csv", checkIfExists: true)
-    qc_done_ch    = qc_reports_ch.collect()
+    // Barrier for overall report — trigger only AFTER per-sample reports
+    done_ch       = GENERATE_SAMPLE_REPORT.out.collect()
+    qc_glob_ch    = done_ch.map { "${params.output}/sample_reports/*_report.csv" }
 
-    qc_glob_ch    = qc_done_ch.map { "${params.output}/sample_reports/*_report.csv" }
-    typer_path_ch = typer_csv_ch.map { it.toString() }
-                                .ifEmpty { Channel.value('NONE') }
+    // Typer path (or NONE if typer wasn’t run)
+    typer_path_ch = typer_csv_ch.ifEmpty { Channel.value('NONE') }.map { it.toString() }
 
+    // Fire the overall report
     GENERATE_OVERALL_REPORT(qc_glob_ch, typer_path_ch)
+
 }
