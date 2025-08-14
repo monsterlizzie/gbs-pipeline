@@ -3,7 +3,7 @@ process combine_results {
     // ID, serotyping results, resistance incidence, resistance alleles, resistance variants, surface protein incidence, surface protein variants, MLST allelic frequency
     tuple val(pair_id), file(sero_results), file(res_incidence), file(res_alleles), file(res_variants), file(surface_protein_incidence), file(surface_protein_variants), file(mlst_allelic_frequency)
     path config
-    path version
+    path version 
 
     output:
     path("${pair_id}_id_combined_output.txt") optional true
