@@ -1,6 +1,6 @@
 nextflow.enable.dsl=2
 
-
+// import modules for process
 include { FILE_VALIDATION; PREPROCESS; READ_QC } from "$projectDir/modules/preprocess"
 include { ASSEMBLY_UNICYCLER; ASSEMBLY_SHOVILL; ASSEMBLY_ASSESS; ASSEMBLY_QC; ASSEMBLY_QC_FALLBACK } from "$projectDir/modules/assembly"
 include { GET_REF_GENOME_BWA_DB; MAPPING; SAM_TO_SORTED_BAM; SNP_CALL; HET_SNP_COUNT; MAPPING_QC; MAPPING_QC_FALLBACK } from "$projectDir/modules/mapping"
