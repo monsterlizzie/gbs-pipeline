@@ -15,7 +15,6 @@ process srst2_for_res_typing {
     script:
     db_name=db.getSimpleName()
     """
-
     srst2 --samtools_args '\\-A' --input_pe ${reads[0]} ${reads[1]} --output ${pair_id} --log --save_scores --min_coverage ${min_coverage} --max_divergence ${max_divergence} --gene_db ${db}
 
     touch ${pair_id}__fullgenes__${db_name}__results.txt
