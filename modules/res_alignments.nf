@@ -1,19 +1,20 @@
 process srst2_for_res_typing {
-
+    label 'srst2'
+    label 'farm_mid'
+    
     input:
-    tuple val(pair_id), file(reads) // ID and paired read files
+    tuple val(pair_id), path(reads) // ID and paired read files
     path db // File of resistance database file(s)
     val(min_coverage) // String of minimum coverage parameter(s) for SRST2
     val(max_divergence) // String of maximum coverage parameter(s) for SRST2
 
     output:
-    tuple val(pair_id), file("${pair_id}*.bam"), emit: bam_files
-    tuple val(pair_id), file("${pair_id}__fullgenes__${db_name}__results.txt"), emit: fullgenes
+    tuple val(pair_id), path("${pair_id}*.bam"), emit: bam_files
+    tuple val(pair_id), path("${pair_id}__fullgenes__${db_name}__results.txt"), emit: fullgenes
 
     script:
     db_name=db.getSimpleName()
     """
-
     srst2 --samtools_args '\\-A' --input_pe ${reads[0]} ${reads[1]} --output ${pair_id} --log --save_scores --min_coverage ${min_coverage} --max_divergence ${max_divergence} --gene_db ${db}
 
     touch ${pair_id}__fullgenes__${db_name}__results.txt
@@ -23,11 +24,11 @@ process srst2_for_res_typing {
 process split_target_RES_sequences {
 
     input:
-    file(fasta_file) // FASTA file of GBS target sequences
-    file(targets_file) // Text file of GBS targets of interest
+    path(fasta_file) // FASTA file of GBS target sequences
+    path(targets_file) // Text file of GBS targets of interest
 
     output:
-    file("CHECK_*")
+    path("CHECK_*")
 
     """
     get_targets_from_db.py -f ${fasta_file} -t ${targets_file} -o CHECK_
@@ -39,15 +40,16 @@ process split_target_RES_sequences {
 }
 
 process split_target_RES_seq_from_sam_file {
-
+    label 'farm_mid'
+    
     input:
-    tuple val(pair_id), file(bam_file) // ID and corresponding BAM file from mapping
-    file(targets_file) // Text file of GBS targets of interest
+    tuple val(pair_id), path(bam_file) // ID and corresponding BAM file from mapping
+    path(targets_file) // Text file of GBS targets of interest
 
     output:
     val(pair_id)
-    file("*_*_${pair_id}*.bam")
-    file("*_*_${pair_id}*.bai")
+    path("*_*_${pair_id}*.bam")
+    path("*_*_${pair_id}*.bai")
 
     """
     set +e
@@ -68,15 +70,16 @@ process split_target_RES_seq_from_sam_file {
 }
 
 process freebayes {
+    label 'farm_mid'
 
     input:
     val(pair_id) // ID
-    file(target_bam) // BAM file from a mapped target sequence of interest
-    file(target_bai) // Corresponding BAM index file
-    file(target_ref) // FASTA file of target sequence
+    path(target_bam) // BAM file from a mapped target sequence of interest
+    path(target_bai) // Corresponding BAM index file
+    path(target_ref) // FASTA file of target sequence
 
     output:
-    tuple val(pair_id), file("${pair_id}_consensus_seq.fna"), emit: consensus
+    tuple val(pair_id), path("${pair_id}_consensus_seq.fna"), emit: consensus
 
     """
     for check_bam_file in CHECK_*_${pair_id}*.bam; do

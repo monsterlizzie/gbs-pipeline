@@ -11,17 +11,19 @@ process getmlst_for_srst2 {
 }
 
 process srst2_for_mlst {
+    label 'srst2'
+    label 'farm_mid'
 
     input:
     tuple path(mlst_fasta), path(mlst_profile_csv) // mlst database
-    tuple val(pair_id), file(reads) // ID and paired read files
+    tuple val(pair_id), path(reads) // ID and paired read files
     val(min_coverage) // String of minimum coverage parameter(s) for SRST2
 
     //publishDir "./${tmp_dir}/${pair_id}", mode: 'move', overwrite: true, pattern: "${pair_id}_${db_name}_*__fullgenes__*__results.txt"
 
     output:
-    tuple val(pair_id), file("${pair_id}*.bam"), file("${pair_id}__mlst__${mlst_name}__results.txt"), file(mlst_db), emit: bam_and_srst2_results
-    tuple val(pair_id), file("${pair_id}__mlst__${mlst_name}__results.txt"), emit: srst2_results
+    tuple val(pair_id), path("${pair_id}*.bam"), path("${pair_id}__mlst__${mlst_name}__results.txt"), path(mlst_db), emit: bam_and_srst2_results
+    tuple val(pair_id), path("${pair_id}__mlst__${mlst_name}__results.txt"), emit: srst2_results
 
     script:
     mlst_db="Streptococcus_agalactiae.fasta"
@@ -49,9 +51,10 @@ process srst2_for_mlst {
 }
 
 process get_mlst_allele_and_pileup {
+    label 'farm_mid'
 
     input:
-    tuple val(pair_id), file(bam_file), file(results_file), file(mlst_alleles)
+    tuple val(pair_id), path(bam_file), path(results_file), path(mlst_alleles)
     val(min_read_depth)
 
     output:

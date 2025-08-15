@@ -27,7 +27,7 @@ process INIT_DB_DIR {
 
     script:
     """
-    mkdir do_not_modify
+    touch do_not_modify
     """
 }
 
@@ -164,7 +164,7 @@ workflow {
                         .map { it[0, 2..-1] }
 
     // Extract only paired reads (R1, R2)
-    OVERALL_QC_PASSED_PAIRED_READS_ch = OVERALL_QC_PASSED_READS_ch.map { id, r1, r2, unpaired -> tuple(id, r1, r2) }
+    OVERALL_QC_PASSED_PAIRED_READS_ch = OVERALL_QC_PASSED_READS_ch.map { id, r1, r2, unpaired -> [id, [r1, r2]] }
 
     // Assemblies for passed samples
     OVERALL_QC_PASSED_ASSEMBLIES_ch = OVERALL_QC.out.result
