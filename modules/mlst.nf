@@ -11,6 +11,8 @@ process getmlst_for_srst2 {
 }
 
 process srst2_for_mlst {
+    label 'srst2'
+    label 'farm_mid'
 
     input:
     tuple path(mlst_fasta), path(mlst_profile_csv) // mlst database
@@ -49,6 +51,7 @@ process srst2_for_mlst {
 }
 
 process get_mlst_allele_and_pileup {
+    label 'farm_mid'
 
     input:
     tuple val(pair_id), path(bam_file), path(results_file), path(mlst_alleles)

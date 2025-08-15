@@ -1,5 +1,7 @@
 process srst2_for_res_typing {
-
+    label 'srst2'
+    label 'farm_mid'
+    
     input:
     tuple val(pair_id), path(reads) // ID and paired read files
     path db // File of resistance database file(s)
@@ -39,7 +41,8 @@ process split_target_RES_sequences {
 }
 
 process split_target_RES_seq_from_sam_file {
-
+    label 'farm_mid'
+    
     input:
     tuple val(pair_id), path(bam_file) // ID and corresponding BAM file from mapping
     path(targets_file) // Text file of GBS targets of interest
@@ -68,6 +71,7 @@ process split_target_RES_seq_from_sam_file {
 }
 
 process freebayes {
+    label 'farm_mid'
 
     input:
     val(pair_id) // ID
