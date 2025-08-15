@@ -27,7 +27,7 @@ process INIT_DB_DIR {
 
     script:
     """
-    mkdir do_not_modify
+    touch do_not_modify
     """
 }
 
