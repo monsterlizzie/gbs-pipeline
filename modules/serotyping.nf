@@ -1,4 +1,5 @@
 process serotyping {
+    label 'srst2'
 
     input:
     tuple val(pair_id), file(reads) // ID and paired read files

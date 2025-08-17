@@ -1,4 +1,5 @@
 process res_typer {
+    label 'srst2'
 
     input:
     tuple val(pair_id), path(gbs_fullgenes), path(gbs_consensus), path(other_fullgenes)
