@@ -200,7 +200,7 @@ This pipeline incorporates code, tools, and databases from numerous open-source 
 
 ### **SRST2**
 - **Citation**: Inouye et al., 2014. *SRST2: Rapid genomic surveillance for public health and hospital microbiology labs*. *Genome Med* 6(11): 90.
-- **License**: [GPL-3.0](https://github.com/katholt/srst2/blob/master/LICENSE)
+- **License**: [BSD](https://github.com/katholt/srst2/blob/master/LICENSE.txt)
 
 ### **FreeBayes**
 - **Citation**: Garrison and Marth. *Haplotype-based variant detection from short-read sequencing* (arXiv preprint arXiv:1207.3907)
