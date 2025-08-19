@@ -62,7 +62,7 @@ output/
 │   ├── resfinder_accessions.txt
 │   ├── new_mlst_alleles.log
 │   └── gbs_typer_report.txt
-├── summary.csv                               # Combined QC + typing per sample
+├── summary.csv                                # Combined QC + typing per sample
 ```
 
 ## 📘 Typing Output Descriptions
