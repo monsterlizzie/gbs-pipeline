@@ -62,7 +62,7 @@ output/
 │   ├── resfinder_accessions.txt
 │   ├── new_mlst_alleles.log
 │   └── gbs_typer_report.txt
-├── summary.csv                                # Combined QC + typing per sample
+├── summary.csv                               # Combined QC + typing per sample
 ```
 
 ## 📘 Typing Output Descriptions
@@ -196,6 +196,7 @@ This pipeline incorporates code, tools, and databases from numerous open-source 
 
 ### **Bracken**
 - **Citation**: Lu et al., 2017. *Bracken: estimating species abundance in metagenomics data*. *PeerJ Comput. Sci.*
+- **License**: [GPL-3.0](https://github.com/jenniferlu717/Bracken/blob/master/LICENSE)
 
 ### **SRST2**
 - **Citation**: Inouye et al., 2014. *SRST2: Rapid genomic surveillance for public health and hospital microbiology labs*. *Genome Med* 6(11): 90.
@@ -207,6 +208,7 @@ This pipeline incorporates code, tools, and databases from numerous open-source 
 
 ### **Bedtools**
 - **Citation**: Quinlan and Hall, 2010. *BEDTools: a flexible suite of utilities for comparing genomic features*. *Bioinformatics* 26(6): 841–842.
+- **License**: [MIT](https://github.com/arq5x/bedtools2/blob/master/LICENSE)
 
 ---
 
