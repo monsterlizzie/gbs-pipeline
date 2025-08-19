@@ -1,9 +1,9 @@
-# 🧬 GBS_QC: Comprehensive QC Pipeline for *Streptococcus agalactiae* WGS
+# 🧬 GBS Pipeline: Comprehensive QC Pipeline for *Streptococcus agalactiae* WGS
 
-**GBS_QC** is a Nextflow DSL2 pipeline that performs comprehensive quality control on *Streptococcus agalactiae* (Group B Streptococcus, GBS) whole-genome sequencing (WGS) data.  
+**GBS Pipeline** is a Nextflow DSL2 pipeline that performs comprehensive quality control on *Streptococcus agalactiae* (Group B Streptococcus, GBS) whole-genome sequencing (WGS) data.  
 It includes read-level, taxonomic, assembly, mapping, and variant QC, and generates structured reports for downstream use.
 
-> 🔧 Based on the [Global PneumoSeq (GPS) pipeline](https://github.com/GlobalPneumoSeq/gps-pipeline), GBS_QC is adapted to focus specifically on high-quality, assembly-backed, taxonomically verified *S. agalactiae* genomes.
+> 🔧 Based on the [Global PneumoSeq (GPS) pipeline](https://github.com/GlobalPneumoSeq/gps-pipeline), GBS Pipeline is adapted to focus specifically on high-quality, assembly-backed, taxonomically verified *S. agalactiae* genomes.
 
 ---
 
@@ -28,8 +28,8 @@ The pipeline executes the following QC stages **for every sample**:
 ### 🛠️ 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/gbs_qc_pipeline.git
-cd gbs_qc_pipeline
+git clone https://github.com/yourusername/gbs-pipeline.git
+cd gbs-pipeline
 ```
 
 ### 📁 2. Prepare input data
