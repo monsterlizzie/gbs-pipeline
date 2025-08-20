@@ -137,7 +137,7 @@ On Sanger LSF farm:
 nextflow run main.nf -profile lsf 
 ```
 
-Add `--run_pbptyper` and `--contigs "assemblies/*.fasta"` if you want to run PBP typing.
+Add `--run_pbptyper` and `--pbp_contig "output/assemblies/*.fasta"` if you want to run PBP typing.
 
 ---
 
