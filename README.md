@@ -86,7 +86,7 @@ The pipeline produces detailed output files under `output/typer/`. See full desc
 | `--ref_genome` | Reference genome FASTA | `data/CP129876.1.fasta` |
 | `--assembler` | Assembly tool (`shovill` or `unicycler`) | `shovill` |
 | `--read_len` | Read length for Bracken | `150` |
-| `--contigs` | Input contigs for PBP typing (optional) | `""` |
+| `--pbp_contig` | Input contigs for PBP typing (optional) | `""` |
 
 ---
 
