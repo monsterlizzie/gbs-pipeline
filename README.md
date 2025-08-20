@@ -51,18 +51,20 @@ output/
 ├── assemblies/                                
 │   └── <sample_id>.contigs.fasta              # Assembled contigs per sample
 ├── sample_reports/
-│   └── <sample_id>_report.csv                 # Individual sample QC csv reports
-├── typer/                                     # All typing-related outputs
-│   ├── existing_sequence_types.txt
-│   ├── serotype_res_incidence.txt
-│   ├── drug_cat_alleles_variants.txt
-│   ├── gbs_res_variants.txt
-│   ├── surface_protein_incidence.txt
-│   ├── surface_protein_variants.txt
-│   ├── resfinder_accessions.txt
-│   ├── new_mlst_alleles.log
-│   └── gbs_typer_report.txt
-├── summary.csv                                # Combined QC + typing per sample
+│   └── <sample_id>_report.csv                 # Individual sample QC reports (per sample)
+├── typer/                                     # Typing-related outputs
+│   ├── existing_sequence_types.txt            # Sequence types assigned by MLST
+│   ├── serotype_res_incidence.txt             # Summary of serotypes and resistance presence
+│   ├── drug_cat_alleles_variants.txt          # Detected resistance alleles per drug category
+│   ├── gbs_res_variants.txt                   # GBS-specific resistance allele calls
+│   ├── surface_protein_incidence.txt          # Detected surface proteins per sample
+│   ├── surface_protein_variants.txt           # Surface protein variant-level results
+│   ├── resfinder_accessions.txt               # Accessions of matched resistance genes from ResFinder
+│   ├── new_mlst_alleles.log                   # Novel MLST alleles not matching existing database
+│   ├── gbs_typer_report.txt                   # Combined report from all typing modules
+│   ├── existing_pbp_alleles.txt               # (optional) Detected known PBP alleles from assemblies
+│   ├── *_PBP_new_allele.faa                   # (optional) FASTA of novel PBP protein sequences
+├── summary.csv                                # Combined summary: QC + typing per sample
 ```
 
 ## 📘 Typing Output Descriptions
