@@ -95,7 +95,7 @@ def main():
 
     out = merged.reindex(columns=ordered).sort_values('Sample_ID')
 
-    cols_to_drop = [c for c in ('Top_Non-Agalactiae_Species', 'Top_Non-agalactiae_Species_%') if c in out.columns]
+    cols_to_drop = [c for c in ('Top_Non-Agalactiae_Species',) if c in out.columns]
     if cols_to_drop:
         out.drop(columns=cols_to_drop, inplace=True)
 
