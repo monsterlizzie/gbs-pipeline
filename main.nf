@@ -389,29 +389,34 @@ workflow {
             .collectFile(name: file("${params.output}/${params.surface_protein_variants_out}"), keepHeader: true)
     }
 
-    if (params.run_pbptyper){
-        if (params.contigs == ""){
-            println("Please specify contigs with --contigs.")
-            println("Print help with --contigs")
-            System.exit(1)
-        }
+    if (params.run_pbptyper) {
+        if (!params.pbp_contig) {
+        println("Please specify contigs with --pbp_contig.")
+        println("Print help with --pbp_contig")
+        System.exit(1)
+    }
 
-        contig_paths = OVERALL_QC_PASSED_ASSEMBLIES_ch
-            .fromPath(params.contigs, checkIfExists: true)
-            .map { file -> tuple(file.baseName, file) }
+    contig_paths = Channel
+        .fromPath(params.pbp_contig, checkIfExists: true)
+        .map { file -> tuple(file.baseName, file) }
 
-        get_pbp_genes(contig_paths, file(params.gbs_blactam_db, checkIfExists: true), params.pbp_frac_align_threshold, params.pbp_frac_identity_threshold)
+    get_pbp_genes(
+        contig_paths,
+        file(params.gbs_blactam_db, checkIfExists: true),
+        params.pbp_frac_align_threshold,
+        params.pbp_frac_identity_threshold
+    )
 
-        PBP1A(get_pbp_genes.out)
-        PBP2B(get_pbp_genes.out)
-        PBP2X(get_pbp_genes.out)
+    PBP1A(get_pbp_genes.out)
+    PBP2B(get_pbp_genes.out)
+    PBP2X(get_pbp_genes.out)
 
-        PBP1A.out
-            .concat(PBP2B.out, PBP2X.out)
-            .set { PBP_all }
+    PBP1A.out
+        .concat(PBP2B.out, PBP2X.out)
+        .set { PBP_all }
 
-        PBP_all
-            .collectFile(name: file("${params.output}/${params.existing_pbp_alleles_out}"), keepHeader: true, sort: true)
+    PBP_all
+        .collectFile(name: file("${params.output}/${params.existing_pbp_alleles_out}"), keepHeader: true, sort: true)
     }
 
     if (params.run_sero_res & params.run_surfacetyper & params.run_mlst){
