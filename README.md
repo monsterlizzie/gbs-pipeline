@@ -13,7 +13,7 @@ The pipeline adapts:
 - QC modules from the [Global PneumoSeq (GPS) Pipeline](https://github.com/GlobalPneumoSeq/gps-pipeline)
 - Typing modules from the [GBS-Typer-sanger-nf](https://github.com/sanger-bentley-group/GBS-Typer-sanger-nf)
 
-The result is a **modular**, **portable**, and **scalable** WGS workflow tailored for GBS genomic surveillance and characterization.
+The result is a **modular**, **portable**, and **scalable** WGS workflow tailored for GBS genomic surveillance and characterisation.
 
 ---
 
@@ -62,7 +62,7 @@ output/
 │   ├── resfinder_accessions.txt
 │   ├── new_mlst_alleles.log
 │   └── gbs_typer_report.txt
-├── summary.csv                               # Combined QC + typing per sample
+├── summary.csv                                # Combined QC + typing per sample
 ```
 
 ## 📘 Typing Output Descriptions
@@ -71,7 +71,7 @@ The pipeline produces detailed output files under `output/typer/`. See full desc
 
 - `serotype_res_incidence.txt`: presence/absence of serotypes and resistance genes
 - `gbs_res_variants.txt`: amino acid variants in resistance genes
-- `drug_cat_alleles_variants.txt`: categorized resistance profiles
+- `drug_cat_alleles_variants.txt`: categorised resistance profiles
 - `new_mlst_alleles.log`: log of novel MLST alleles
 - `existing_sequence_types.txt`: matched STs from the MLST database
 - `surface_protein_incidence.txt`, `surface_protein_variants.txt`
