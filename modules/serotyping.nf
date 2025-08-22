@@ -1,5 +1,6 @@
 process serotyping {
     label 'srst2'
+    label 'farm_mid'
 
     input:
     tuple val(pair_id), file(reads) // ID and paired read files

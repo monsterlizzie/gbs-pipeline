@@ -1,4 +1,6 @@
 process get_version {
+    label 'farm_mid'
+    
     output:
     path "version.txt"
 

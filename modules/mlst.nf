@@ -1,4 +1,6 @@
 process getmlst_for_srst2 {
+    label 'farm_mid'
+
     output:
     tuple path(mlst_fasta), path(mlst_profile_csv), emit: getmlst_results
 
