@@ -22,6 +22,7 @@ process srst2_for_res_typing {
 }
 
 process split_target_RES_sequences {
+    label 'farm_mid'
 
     input:
     path(fasta_file) // FASTA file of GBS target sequences
