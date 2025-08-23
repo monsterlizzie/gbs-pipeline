@@ -20,6 +20,8 @@ process GENERATE_SAMPLE_REPORT {
 
 process GENERATE_OVERALL_REPORT {
   label 'python_container'
+  label 'farm_low'
+  
   publishDir "${params.output}", mode: 'copy'
 
   input:

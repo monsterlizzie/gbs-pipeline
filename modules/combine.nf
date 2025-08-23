@@ -1,4 +1,6 @@
 process combine_results {
+    label 'farm_low'
+
     input:
     // ID, serotyping results, resistance incidence, resistance alleles, resistance variants, surface protein incidence, surface protein variants, MLST allelic frequency
     tuple val(pair_id), file(sero_results), file(res_incidence), file(res_alleles), file(res_variants), file(surface_protein_incidence), file(surface_protein_variants), file(mlst_allelic_frequency)
@@ -32,6 +34,7 @@ process combine_results {
 }
 
 process finalise_sero_res_results {
+    label 'farm_low'
 
     input:
     // ID, serotyping results, resistance incidence, resistance alleles and resistance variants results,
@@ -57,6 +60,7 @@ process finalise_sero_res_results {
 }
 
 process finalise_surface_typer_results {
+    label 'farm_low'
 
     input:
     // ID, surface protein incidence, surface protein variants
@@ -78,6 +82,7 @@ process finalise_surface_typer_results {
 }
 
 process finalise_pbp_existing_allele_results {
+    label 'farm_low'
 
     input:
     // ID, existing PBP allele file
