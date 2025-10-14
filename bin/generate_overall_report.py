@@ -104,7 +104,7 @@ def main():
     #    - For PASS rows, missing in-silico fields => "MODULE FAILURE"
     if 'Overall_QC' in out.columns:
         mask = (out['Overall_QC'] == 'PASS')
-        skip_cols = ['23S1_SNP', '23S3_SNP', 'gyrA_SNP', 'parC_SNP', 'typer_pipeline_version']
+        skip_cols = ['23S1_SNP', '23S3_SNP', 'gyrA_SNP', 'parC_SNP', 'typer_pipeline_version','cps_type']
         fill_cols = [c for c in out.columns if c not in skip_cols]
         out.loc[mask, fill_cols] = out.loc[mask, fill_cols].fillna('MODULE FAILURE')
 
