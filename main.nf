@@ -45,6 +45,7 @@ workflow {
     // Get path to Kraken2 Database, download if necessary
     GET_KRAKEN2_DB(params.kraken2_db_remote, db_dir_ch)
 
+
     // ----------------------------------------------------------
     // READS: build canonical (deduplicated) read-pairs channel
     // ----------------------------------------------------------
@@ -61,6 +62,10 @@ workflow {
             tuple(id, pick.collect { file(it) })
         }
 
+    // ----------------------------------------------------------
+    // QC SECTION — can be skipped using --skip_qc true
+    // ----------------------------------------------------------
+    if (!params.skip_qc) {
     // Basic input files validation
     // Output into Channel FILE_VALIDATION.out.result
     FILE_VALIDATION(RAW_READS_ONE_ch)
@@ -171,6 +176,7 @@ workflow {
                             .join(ASSEMBLY_ch, failOnDuplicate: true)
                             .filter { it[1] == 'PASS' }
                             .map { it[0, 2..-1] }
+                            
 
     // Sample reports
     GENERATE_SAMPLE_REPORT(
@@ -186,27 +192,36 @@ workflow {
             [sample_id, report_paths]
         }
     )
+} // <--- end skip_qc block
 
-    // Optional: keep this small guard, though we don't use read_pairs_ch below
-    if (params.run_sero_res | params.run_mlst | params.run_surfacetyper){
-        if (params.reads == ""){
-            println("Please specify reads with --reads.")
-            println("Print help with nextflow main.nf --help")
-            System.exit(1)
-        }
-        Channel.fromFilePairs( params.reads, checkIfExists: true )
-            .set { read_pairs_ch }
+// ----------------------------------------------------------
+// Fallback if QC is skipped — use reads directly
+// ----------------------------------------------------------
+if (params.skip_qc) {
+    log.info "Skipping QC - using raw reads directly for typer modules."
+    OVERALL_QC_PASSED_PAIRED_READS_ch = Channel.fromFilePairs(
+        "$params.reads/*_{,R}{1,2}{,_001}.{fq,fastq}{,.gz}",
+        checkIfExists: true
+    ).map { id, reads -> tuple(id, reads) }
+}
+
+ // Guard clause — allow QC-only runs but prevent 'nothing to do'
+if (!params.run_sero_res && !params.run_surfacetyper && !params.run_mlst && !params.run_pbptyper) {
+    if (params.skip_qc) {
+        println(" Error: all typer modules disabled and QC skipped — nothing to run.")
+        System.exit(1)
+    } else {
+        log.info " Running QC-only mode (no typing modules enabled)."
     }
+    Channel.fromFilePairs( params.reads, checkIfExists: true )
+            .set { read_pairs_ch }
+}
+
+   
 
     // Check outputs dir
     if (params.output == ""){
         println("Please specify the results directory with --params.output.")
-        println("Print help with nextflow main.nf --help")
-        System.exit(1)
-    }
-
-    if (!params.run_sero_res && !params.run_surfacetyper && !params.run_mlst && !params.run_pbptyper){
-        println("Please specify one or more pipelines to run.")
         println("Print help with nextflow main.nf --help")
         System.exit(1)
     }
@@ -444,14 +459,27 @@ workflow {
         )
     }
 
-    // Barrier for overall report — trigger only AFTER per-sample reports
-    done_ch       = GENERATE_SAMPLE_REPORT.out.collect()
-    qc_glob_ch    = done_ch.map { "${params.output}/sample_reports/*_report.csv" }
+    // Barrier for overall report
+    if (!params.skip_qc) {
+        done_ch    = GENERATE_SAMPLE_REPORT.out.collect()
+        qc_glob_ch = done_ch.map { "${params.output}/sample_reports/*_report.csv" }
+    } else {
+        // If QC was skipped, create a dummy channel so downstream logic still works
+        qc_glob_ch = Channel.value('NONE')
+    }
+   
+
+    // Fallback for typer channel (QC-only run)
+    if (!params.run_sero_res && !params.run_surfacetyper && !params.run_mlst && !params.run_pbptyper) {
+    typer_csv_ch = Channel.value('NONE')
+    }
 
     // Typer path (or NONE if typer wasn’t run)
     typer_path_ch = typer_csv_ch.ifEmpty { Channel.value('NONE') }.map { it.toString() }
 
-    // Fire the overall report
+    // Fire the overall report (still runs, even if typer_path_ch == 'NONE')
     GENERATE_OVERALL_REPORT(qc_glob_ch, typer_path_ch)
+
+
 
 }
