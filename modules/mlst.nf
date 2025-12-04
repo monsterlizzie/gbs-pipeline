@@ -33,7 +33,7 @@ process srst2_for_mlst {
     """
     set +e
 
-    srst2 --samtools_args '\\-A' --input_pe ${reads[0]} ${reads[1]} --output ${pair_id} --save_scores --mlst_db ${mlst_fasta} --mlst_definitions ${mlst_profile_csv} --mlst_delimiter '_' --min_coverage ${min_coverage}
+    srst2 --input_pe ${reads[0]} ${reads[1]} --output ${pair_id} --save_scores --mlst_db ${mlst_fasta} --mlst_definitions ${mlst_profile_csv} --mlst_delimiter '_' --min_coverage ${min_coverage}
 
     touch ${pair_id}__mlst__${mlst_name}__results.txt
 
